@@ -6,6 +6,7 @@
 
 #include "ExecuteVisitor.h"
 #include "ClassVisitor.h"
+#include "../scope/BFPrimitive.h"
 
 ExecuteVisitor::ExecuteVisitor(Scope s) {
     scope = &s;
@@ -25,10 +26,26 @@ antlrcpp::Any ExecuteVisitor::visitMain(BFParser::MainContext *ctx) {
     for (int i = 0; i < statList.size(); ++i) {
         visitStat(statList[i]);
     }
-    return BFParserBaseVisitor::visitMain(ctx);
+    return BFPrimitive(BFPrimitive::Primitive::INT, 0);
 }
 
 antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
-
+//    switch(identifyStatement(ctx)){
+//        case Assign:
+//            scope->variables
+//    }
+    std::cout << identifyStatement(ctx) << std::endl;
     return BFParserBaseVisitor::visitStat(ctx);
+}
+
+ExecuteVisitor::StatementTypes ExecuteVisitor::identifyStatement(BFParser::StatContext *ctx) {
+    if(ctx->Equal() != nullptr){
+        return Assign;
+    }else if(ctx->classDeclaration() != nullptr){
+        return ClassDeclaration;
+    }else if(ctx->flowControl() != nullptr){
+        return FlowControl;
+    }else{
+        return Expression;
+    }
 }

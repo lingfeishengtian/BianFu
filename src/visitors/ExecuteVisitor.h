@@ -14,10 +14,15 @@ public:
     ExecuteVisitor(Scope s);
 
 private:
-    antlrcpp::Any visitStat(BFParser::StatContext *ctx) override;
     enum StatementTypes{
-        
+        Assign,
+        Expression,
+        ClassDeclaration,
+        FlowControl
     };
+
+    antlrcpp::Any visitStat(BFParser::StatContext *ctx) override;
+    StatementTypes identifyStatement(BFParser::StatContext *ctx);
 
 public:
     antlrcpp::Any visitMain(BFParser::MainContext *ctx) override;

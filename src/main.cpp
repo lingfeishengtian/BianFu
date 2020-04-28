@@ -1,16 +1,6 @@
-/* Copyright (c) 2012-2017 The ANTLR Project. All rights reserved.
- * Use of this file is governed by the BSD 3-clause license that
- * can be found in the LICENSE.txt file in the project root.
- */
-
-//
-//  main.cpp
-//  antlr4-cpp-demo
-//
-//  Created by Mike Lischke on 13.03.16.
-//
-
 #include <iostream>
+#include <io.h>
+#include <fcntl.h>
 
 #include "antlr4-runtime.h"
 
@@ -19,11 +9,14 @@
 
 #include "error/BianFuErrorListener.h"
 #include "scope/Scope.h"
+#include "scope/BFPrimitive.h"
 #include "visitors/ExecuteVisitor.h"
 
 using namespace antlr4;
 
 int main(int , const char **) {
+    _setmode(_fileno(stdout), _O_U16TEXT);
+
     ANTLRInputStream input("a = 3");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
@@ -45,7 +38,7 @@ int main(int , const char **) {
 
     Scope globalScope = Scope();
     ExecuteVisitor executeVisitor = ExecuteVisitor(globalScope);
-
+    std::wcout << L"蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
 
     return 0;
 }
