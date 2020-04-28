@@ -7,7 +7,16 @@
 
 
 class BFVariable {
+public:
+    enum Primitive{
+        INT,
+        CHAR,
+        STRING,
+        ARRAY,
+        MAP
+    };
 
+    bool isPrimitive();
 };
 
 

@@ -5,6 +5,7 @@ project(BianFu)
 # You should also find the includes for antlr and put thim in antlr/antlr4-runtime
 set(CMAKE_CXX_STANDARD 14)
 include_directories(antlr/antlr4-runtime/)
+include_directories(gen)
 
 file(GLOB srcFiles src/error/**.cpp src/scope/**.cpp src/visitors/**.cpp)
 file(GLOB generated gen/**.cpp)

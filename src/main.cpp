@@ -13,10 +13,13 @@
 #include <iostream>
 
 #include "antlr4-runtime.h"
-#include "../gen/BFLexer.h"
-#include "../gen/BFParser.h"
+
+#include "BFLexer.h"
+#include "BFParser.h"
+
 #include "error/BianFuErrorListener.h"
 #include "scope/Scope.h"
+#include "visitors/ExecuteVisitor.h"
 
 using namespace antlr4;
 
@@ -41,6 +44,8 @@ int main(int , const char **) {
     std::cout << tree->toStringTree(&parser) << std::endl;
 
     Scope globalScope = Scope();
+    ExecuteVisitor executeVisitor = ExecuteVisitor(globalScope);
+
 
     return 0;
 }
