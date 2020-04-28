@@ -1,6 +1,4 @@
 #include <iostream>
-#include <io.h>
-#include <fcntl.h>
 
 #include "antlr4-runtime.h"
 
@@ -12,10 +10,17 @@
 #include "scope/BFPrimitive.h"
 #include "visitors/ExecuteVisitor.h"
 
+#ifdef _WIN32
+    #include <io.h>
+    #include <fcntl.h>
+#endif
+
 using namespace antlr4;
 
 int main(int , const char **) {
-    _setmode(_fileno(stdout), _O_U16TEXT);
+    #ifdef _WIN32
+        _setmode(_fileno(stdout), _O_U16TEXT);
+    #endif
 
     ANTLRInputStream input("a = 3");
     BFLexer lexer(&input);
@@ -38,7 +43,12 @@ int main(int , const char **) {
 
     Scope globalScope = Scope();
     ExecuteVisitor executeVisitor = ExecuteVisitor(globalScope);
-    std::wcout << L"蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
+
+    #ifdef _WIN32
+        std::wcout << L"蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
+    #else
+        std::cout << "蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
+    #endif
 
     return 0;
 }
