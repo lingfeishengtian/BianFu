@@ -1,7 +1,7 @@
-parser grammar TParser;
+parser grammar BFParser;
 
 options {
-	tokenVocab = TLexer;
+	tokenVocab = BFLexer;
 }
 
 // These are all supported parser sections:
@@ -115,8 +115,6 @@ expr: expr Star expr
     | idarray
     | emptyarr
 ;
-
-funcDeclaration:
 
 classDeclaration: KClass id block;
 

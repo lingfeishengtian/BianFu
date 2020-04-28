@@ -13,27 +13,34 @@
 #include <iostream>
 
 #include "antlr4-runtime.h"
-#include "gen/TLexer.cpp"
-#include "gen/TParser.cpp"
-#include "gen/TLexer.h"
-#include "gen/TParser.h"
+#include "../gen/BFLexer.h"
+#include "../gen/BFParser.h"
+#include "error/BianFuErrorListener.h"
+#include "scope/Scope.h"
 
 using namespace antlr4;
 
 int main(int , const char **) {
-    ANTLRInputStream input("");
-    TLexer lexer(&input);
+    ANTLRInputStream input("a = 3");
+    BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 
-    tokens.fill();
-    for (auto token : tokens.getTokens()) {
-        std::cout << token->toString() << std::endl;
-    }
+    BianFuErrorListener bianFuErrorListener = BianFuErrorListener();
 
-    TParser parser(&tokens);
+    tokens.fill();
+//    for (auto token : tokens.getTokens()) {
+//        std::cout << token->toString() << std::endl;
+//    }
+
+    BFParser parser(&tokens);
+    parser.removeErrorListeners();
+    parser.addErrorListener(&bianFuErrorListener);
+
     tree::ParseTree *tree = parser.main();
 
     std::cout << tree->toStringTree(&parser) << std::endl;
+
+    Scope globalScope = Scope();
 
     return 0;
 }

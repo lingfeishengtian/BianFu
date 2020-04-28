@@ -6,5 +6,10 @@ project(BianFu)
 set(CMAKE_CXX_STANDARD 14)
 include_directories(antlr/antlr4-runtime/)
 
-add_executable(BianFu main.cpp)
+file(GLOB srcFiles src/error/**.cpp src/scope/**.cpp src/visitors/**.cpp)
+file(GLOB generated gen/**.cpp)
+
+message(STATUS ${generated})
+
+add_executable(BianFu src/main.cpp ${generated} ${srcFiles})
 target_link_libraries(BianFu "${CMAKE_SOURCE_DIR}/antlr/libantlr4-runtime.a")

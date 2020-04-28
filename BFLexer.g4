@@ -1,4 +1,4 @@
-lexer grammar TLexer;
+lexer grammar BFLexer;
 
 // These are all supported lexer sections:
 
