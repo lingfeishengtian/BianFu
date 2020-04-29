@@ -48,9 +48,19 @@ WS: [ \t\r\n]+ -> channel(99);
 Return: 'return';
 Continue: 'continue';
 
+// Default functions
+FPrint: '出';
+
+// Keywords!
 KInt: '整数';
 KDecimal: '小数';
 KChar: '字';
+KVar: '变量';
+
+KVoid: '无';
+
+KPublic: '公';
+KPrivate: '母';
 
 KClass: '类';
 

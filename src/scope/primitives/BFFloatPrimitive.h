@@ -15,6 +15,7 @@ public:
     BFFloatPrimitive(double);
     BFFloatPrimitive(const std::string&, double, Scope*);
     BFFloatPrimitive *useOperator(const std::string&, Scope*) override;
+    std::string to_string() override;
 
 private:
     BFFloatPrimitive *operateOn(const std::string&, BFFloatPrimitive*);

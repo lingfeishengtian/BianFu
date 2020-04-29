@@ -30,12 +30,16 @@ private:
         Float,
         Int,
         String,
-        Array
+        Array,
+        FunctionCall
     };
 
     BianFuLog logger = BianFuLog();
 
     antlrcpp::Any visitStat(BFParser::StatContext *ctx) override;
+
+    antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
+
     StatementTypes identifyStatement(BFParser::StatContext *ctx);
     ExpressionTypes identifyExpression(BFParser::ExprContext *ctx);
     void exit(int);

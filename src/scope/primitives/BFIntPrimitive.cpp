@@ -11,11 +11,27 @@ BFIntPrimitive::BFIntPrimitive(BFIntPrimitive::Primitive p, int val, const std::
     value = val;
     id = ID;
     parent = par;
+    setType(p);
 }
 
 BFIntPrimitive::BFIntPrimitive(BFIntPrimitive::Primitive p, int val) {
     primitiveType = p;
     value = val;
+    setType(p);
+}
+
+void BFIntPrimitive::setType(BFIntPrimitive::Primitive p) {
+    switch (p){
+        case INT:
+            type = "INT";
+            break;
+        case CHAR:
+            type = "CHAR";
+            break;
+        case BOOL:
+            type = "BOOL";
+            break;
+    }
 }
 
 std::string BFIntPrimitive::to_string() {

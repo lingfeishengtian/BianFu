@@ -20,8 +20,11 @@ public:
     BFIntPrimitive(Primitive, int, const std::string&, Scope*);
     BFIntPrimitive(Primitive, int);
 
-    std::string to_string();
+    std::string to_string() override;
     Scope* useOperator(const std::string&, Scope*) override;
+
+private:
+    void setType(Primitive);
 };
 
 

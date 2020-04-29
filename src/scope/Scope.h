@@ -12,6 +12,7 @@
 class Scope{
 public:
     std::string id;
+    std::string type;
     Scope *parent;
     std::map<std::string, Scope*> classes;
     std::map<std::string, Scope*> functions;
@@ -24,6 +25,7 @@ public:
     std::string trace();
 
     virtual Scope *useOperator(const std::string&, Scope*);
+    virtual std::string to_string();
 };
 
 

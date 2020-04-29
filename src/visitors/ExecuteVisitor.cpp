@@ -16,19 +16,24 @@ ExecuteVisitor::ExecuteVisitor(Scope s) {
 }
 
 antlrcpp::Any ExecuteVisitor::visitClassDeclaration(BFParser::ClassDeclarationContext *ctx) {
-    std::string className = ctx->ID()->getText();
-    Scope newClass = Scope(scope, className);
-    scope->classes.insert(std::pair<std::string, Scope*>(className, &newClass));
+    std::string className = ctx->id->getText();
+    Scope* newClass = new Scope(scope, className);
+    scope->classes.insert(std::make_pair(className, newClass));
     //ClassVisitor classVisitor = ClassVisitor(newClass);
 
     return newClass;
 }
 
 antlrcpp::Any ExecuteVisitor::visitMain(BFParser::MainContext *ctx) {
+    logger.log("蝙蝠程序开始", BianFuLog::Situation::WARNING);
     std::vector<BFParser::StatContext*> statList = ctx->stat();
     for (auto & i : statList) {
         visitStat(i);
     }
+
+//    for (auto pair : scope->classes){
+//        logger.log(pair.first + " " + pair.second->to_string());
+//    }
 
     logger.log("蝙蝠程序成功！", BianFuLog::WARNING);
     return 0;
@@ -38,8 +43,8 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
     switch(identifyStatement(ctx)){
         case Assign: {
 //            try {
-            Scope* p = visitExpr(ctx->expr()[1]);
-            std::string id = ctx->expr()[0]->getText();
+            Scope* p = visitExpr(ctx->assignment()->expr()[1]);
+            std::string id = ctx->assignment()->expr()[0]->getText();
             p->id = id;
             p->parent = scope;
             scope->variables.insert(std::make_pair(id, p));
@@ -50,8 +55,11 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
             break;
         }
         case Expression:{
-            visitExpr(ctx->expr()[0]);
+            visitExpr(ctx->expr());
             break;
+        }
+        case ClassDeclaration:{
+            visitClassDeclaration(ctx->classDeclaration());
         }
     }
     //std::wcout << identifyStatement(ctx) << std::endl;
@@ -60,7 +68,7 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
 }
 
 ExecuteVisitor::StatementTypes ExecuteVisitor::identifyStatement(BFParser::StatContext *ctx) {
-    if(ctx->Equal() != nullptr){
+    if(ctx->assignment() != nullptr){
         return Assign;
     }else if(ctx->classDeclaration() != nullptr){
         return ClassDeclaration;
@@ -76,20 +84,22 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
         case Operation: {
             Scope* s1 = visitExpr(ctx->expr()[0]);
             Scope* s2 = visitExpr(ctx->expr()[1]);
-            Scope* s3 = s1->useOperator(ctx->op->getText(), s2);
-
-            logger.log(dynamic_cast<BFFloatPrimitive*>(s3)->value);
-            return s3;
+            return s1->useOperator(ctx->op->getText(), s2);
         }
         case ParenthesisWrapped:{
             return visitExpr(ctx->expr(0));
         }
-        case Identifier:
+        case Identifier: {
+            if (scope->variables.find(ctx->getText()) == scope->variables.end())
+                throw BianFuError(scope->trace(), "找不到变量" + ctx->getText());
             return scope->variables[ctx->getText()];
+        }
         case Int:
             return static_cast<Scope*>(new BFIntPrimitive(BFIntPrimitive::Primitive::INT, std::stoi(ctx->getText())));
         case Float:
             return static_cast<Scope*>(new BFFloatPrimitive(std::stod(ctx->getText())));
+        case FunctionCall:
+            return visitDefaultFunctions(ctx->defaultFunctions());
 //        case String:
 //            return BFIntPrimitive(BFIntPrimitive::Primitive::INT, atoi(ctx->getText().c_str()));
     }
@@ -100,10 +110,20 @@ ExecuteVisitor::ExpressionTypes ExecuteVisitor::identifyExpression(BFParser::Exp
     if(ctx->op != nullptr) return Operation;
     else if(ctx->OpenPar() != nullptr) return ParenthesisWrapped;
     else if(ctx->QuestionMark() != nullptr) return Ternary;
-    else if(ctx->INT() != nullptr) return Int;
-    else if(ctx->FLOAT() != nullptr) return Float;
-    else if(ctx->String() != nullptr) return String;
+    else if(ctx->type() != nullptr) {
+        if (ctx->type()->INT() != nullptr) return Int;
+        else if (ctx->type()->FLOAT() != nullptr) return Float;
+        else if (ctx->type()->String() != nullptr) return String;
+    }
     else if(ctx->array() != nullptr) return Array;
     else if(ctx->id != nullptr) return Identifier;
+    else if(ctx->defaultFunctions() != nullptr) return FunctionCall;
     else throw BianFuError(scope->isGlobal() ? "Global scope." : "Not global: " + scope->trace() + __FUNCTION__, "找不到这段程序的目的：" + ctx->getText());
+}
+
+antlrcpp::Any ExecuteVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) {
+    if(ctx->FPrint() != nullptr){
+        logger.log(static_cast<Scope*>(visitExpr(ctx->expr()))->to_string());
+    }
+    return nullptr;
 }

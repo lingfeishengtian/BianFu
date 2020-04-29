@@ -28,3 +28,7 @@ std::string Scope::trace() {
 Scope* Scope::useOperator(const std::string&, Scope *) {
     return nullptr;
 }
+
+std::string Scope::to_string() {
+    return id;
+}

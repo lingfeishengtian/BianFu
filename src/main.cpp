@@ -24,7 +24,7 @@ int main(int , const char **) {
         std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("a = 4\nb = 2.1\n(a / b) * 9.6\n类 三{}");
+    ANTLRInputStream input("变量 a = 4\n变量 b = 2.1\n出(b)\n变量 c = (b/a) * 9.6\n出(c + b)\n类 三{}");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 
@@ -33,7 +33,7 @@ int main(int , const char **) {
 
     tokens.fill();
     for (auto token : tokens.getTokens()) {
-        std::cout << token->toString() << " " << token->getType() << std::endl;
+        std::cout << token->toString() << " " << std::endl;
     }
 
     BFParser parser(&tokens);

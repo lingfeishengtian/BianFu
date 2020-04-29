@@ -89,24 +89,41 @@ block: OpenCurly stat+ CloseCurly
     | OpenCurly CloseCurly
 ;
 
+classStat: assignment
+    | functionDeclaration
+;
+
 stat: expr
-    | expr Equal expr
+    | assignment
     | classDeclaration
     | flowControl
 ;
+
+assignment: KVar expr Equal expr;
 
 expr: expr op=(Star | Divide) expr
     | expr op=(Plus | Minus) expr
     | OpenPar expr ClosePar
     | id = ID
     | <assoc = right> expr QuestionMark expr Colon expr
-    | FLOAT
-    | INT
-    | String
+    | type
     | array
+    | defaultFunctions
 ;
 
-classDeclaration: KClass ID block;
+defaultFunctions: FPrint OpenPar expr ClosePar
+;
+
+classDeclaration: KClass id=ID block;
+
+functionDeclaration: (KPublic | KPrivate) id=ID OpenPar el += functionParameter (Comma el += functionParameter)* ClosePar #FilledParamList
+    | (KPublic | KPrivate) id=ID OpenPar ClosePar #EmptyParameterListFunc
+    | (type | ID | KVoid) functionDeclaration #FunctionWithSpecifiedReturnType
+;
+
+functionParameter: (type | ID) ID;
+
+operatorDeclaration: ; // WORK IN PROGRESS!!!!
 
 flowControl:
 	Return expr # Return
@@ -114,6 +131,10 @@ flowControl:
 	| Continue # Continue
 ;
 
+type : FLOAT
+    | INT
+    | String
+;
 array : OpenCurly el += expr (Comma el += expr)* CloseCurly
     | OpenCurly CloseCurly;
 any: t = .;
