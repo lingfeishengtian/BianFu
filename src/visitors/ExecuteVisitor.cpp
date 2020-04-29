@@ -15,7 +15,7 @@ ExecuteVisitor::ExecuteVisitor(Scope s) {
 }
 
 antlrcpp::Any ExecuteVisitor::visitClassDeclaration(BFParser::ClassDeclarationContext *ctx) {
-    std::string className = ctx->id()->getText();
+    std::string className = ctx->ID()->getText();
     Scope newClass = Scope(scope, className);
     scope->classes.insert(std::pair<std::string, Scope*>(className, &newClass));
     //ClassVisitor classVisitor = ClassVisitor(newClass);
@@ -29,7 +29,7 @@ antlrcpp::Any ExecuteVisitor::visitMain(BFParser::MainContext *ctx) {
         visitStat(i);
     }
 
-    logger.log("蝙蝠程序成功！");
+    logger.log("蝙蝠程序成功！", BianFuLog::WARNING);
     return 0;
 }
 
@@ -37,10 +37,9 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
     switch(identifyStatement(ctx)){
         case Assign: {
 //            try {
-            BFPrimitive p = visitExpr(ctx->expr()[1]);
-            std::string id = ctx->expr()[0]->id()->getText();
-            auto clone = new BFPrimitive(p.primitiveType, p.value, id, scope);
-            scope->variables.insert(std::pair<std::string, Scope*>(id, clone));
+            Scope* p = visitExpr(ctx->expr()[1]);
+            std::string id = ctx->expr()[0]->getText();
+            scope->variables.insert(std::make_pair(id, p));
 //            }catch(std::exception e){
 //                logger.log(e.);
 //                //TODO: Handle error
@@ -48,9 +47,7 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
             break;
         }
         case Expression:{
-            Scope* tmp = visitExpr(ctx->expr()[0]);
-            auto def = dynamic_cast<BFPrimitive*>(tmp);
-            logger.log(std::to_string(def->value), BianFuLog::Situation::WARNING);
+            visitExpr(ctx->expr()[0]);
             break;
         }
     }
@@ -76,15 +73,17 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
         case Operation: {
             Scope* s1 = visitExpr(ctx->expr()[0]);
             Scope* s2 = visitExpr(ctx->expr()[1]);
-            return s1->useOperator(ctx->op->getText(), s2);
+            Scope* s3 = s1->useOperator(ctx->op->getText(), s2);
+            return s3;
         }
-        case Identifier:{
+        case ParenthesisWrapped:{
+            return visitExpr(ctx->expr(0));
+        }
+        case Identifier:
             return scope->variables[ctx->getText()];
-        }
         case Int:
             int a = std::stoi(ctx->getText());
-            BFPrimitive p = BFPrimitive(BFPrimitive::Primitive::INT, a);
-            return p;
+            return static_cast<Scope*>(new BFPrimitive(BFPrimitive::Primitive::INT, a));
 //        case String:
 //            return BFPrimitive(BFPrimitive::Primitive::INT, atoi(ctx->getText().c_str()));
     }
@@ -95,9 +94,9 @@ ExecuteVisitor::ExpressionTypes ExecuteVisitor::identifyExpression(BFParser::Exp
     if(ctx->op != nullptr) return Operation;
     else if(ctx->OpenPar() != nullptr) return ParenthesisWrapped;
     else if(ctx->QuestionMark() != nullptr) return Ternary;
-    else if(ctx->identifier != nullptr) return Identifier;
     else if(ctx->INT() != nullptr) return Int;
     else if(ctx->String() != nullptr) return String;
     else if(ctx->array() != nullptr) return Array;
+    else if(ctx->id != nullptr) return Identifier;
     else throw BianFuError(scope->isGlobal() ? "Global scope." : "Not global: " + scope->trace() + __FUNCTION__, "找不到这段程序的目的：" + ctx->getText());
 }

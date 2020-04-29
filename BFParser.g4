@@ -69,14 +69,6 @@ void doAfter() {}
 
 // Actual grammar start.
 main: stat+ EOF;
-divide : ID (and_ GreaterThan)? {doesItBlend()}?;
-and_ @init{ doInit(); } @after { doAfter(); } : And ;
-
-conquer:
-	divide+
-	| {doesItBlend()}? and_ { myAction(); }
-	| ID (LessThan* divide)?? { $ID.text; }
-;
 
 // Unused rule to demonstrate some of the special features.
 unused[double input = 111] returns [double calculated] locals [int _a, double _b, int _c] @init{ doInit(); } @after { doAfter(); } :
@@ -97,8 +89,8 @@ block: OpenCurly stat+ CloseCurly
     | OpenCurly CloseCurly
 ;
 
-stat: expr Equal expr
-    | expr
+stat: expr
+    | expr Equal expr
     | classDeclaration
     | flowControl
 ;
@@ -106,14 +98,14 @@ stat: expr Equal expr
 expr: expr op=(Star | Divide) expr
     | expr op=(Plus | Minus) expr
     | OpenPar expr ClosePar
+    | id = ID
     | <assoc = right> expr QuestionMark expr Colon expr
-    | identifier = id
     | INT
     | String
     | array
 ;
 
-classDeclaration: KClass id block;
+classDeclaration: KClass ID block;
 
 flowControl:
 	Return expr # Return
@@ -121,7 +113,6 @@ flowControl:
 	| Continue # Continue
 ;
 
-id: ID;
 array : OpenCurly el += expr (Comma el += expr)* CloseCurly
     | OpenCurly CloseCurly;
 any: t = .;

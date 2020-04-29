@@ -24,6 +24,7 @@ lexer grammar BFLexer;
 bool canTestFoo() { return true; }
 bool isItFoo() { return true; }
 bool isItBar() { return true; }
+void debugMessage() { std::cout << "tst" << std::endl; }
 
 void myFooLexerAction() { /* do something*/ };
 void myBarLexerAction() { /* do something*/ };
@@ -41,6 +42,9 @@ tokens {
 	DUMMY
 }
 
+Comment : '#' ~[\r\n]* '\r'? '\n' -> channel(CommentsChannel);
+WS: [ \t\r\n]+ -> channel(99);
+
 Return: 'return';
 Continue: 'continue';
 
@@ -49,12 +53,6 @@ KDecimal: '小数';
 KChar: '字';
 
 KClass: '类';
-
-INT: Digit+;
-Digit: [0-9];
-
-ID: LETTER (LETTER | '0'..'9')*;
-fragment LETTER : [a-zA-Z\u0080-\u{10FFFF}];
 
 LessThan: '<';
 GreaterThan:  '>';
@@ -76,15 +74,14 @@ Comma: ',';
 Dollar: '$' -> more, mode(Mode1);
 Ampersand: '&' -> type(DUMMY);
 
-String: '"' .*? '"';
-Foo: {canTestFoo()}? 'foo' {isItFoo()}? { myFooLexerAction(); };
-Bar: 'bar' {isItBar()}? { myBarLexerAction(); };
-Any: Foo Dot Bar? DotDot Baz;
+INT: DIGIT+;
+ID: LETTER (LETTER | '0'..'9')*;
 
-Comment : '#' ~[\r\n]* '\r'? '\n' -> channel(CommentsChannel);
-WS: [ \t\r\n]+ -> channel(99);
+String: '"' .*? '"';
 
 fragment Baz: 'Baz';
+fragment LETTER : [a-zA-Z\u0080-\u{10FFFF}];
+fragment DIGIT : [0-9];
 
 mode Mode1;
 Dot: '.';

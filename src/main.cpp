@@ -19,25 +19,22 @@
 using namespace antlr4;
 
 int main(int , const char **) {
-//    std::map<std::string, Scope*> map;
-//    BFPrimitive t = BFPrimitive(BFPrimitive::Primitive::INT, 9);
-//    map["te"] = &t;
-//    std::cout << map["te"]->getValueIfPrimitive();
     #ifdef _WIN32
         _setmode(_fileno(stdout), _O_U16TEXT);
         std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("a = 1\nb = 99\na + b * b");
+    ANTLRInputStream input("a = 2\nb = 4\n(a + b) * 4");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 
+    BianFuLog logger = BianFuLog();
     BianFuErrorListener bianFuErrorListener = BianFuErrorListener();
 
     tokens.fill();
-//    for (auto token : tokens.getTokens()) {
-//        std::cout << token->toString() << std::endl;
-//    }
+    for (auto token : tokens.getTokens()) {
+        std::cout << token->toString() << " " << token->getType() << std::endl;
+    }
 
     BFParser parser(&tokens);
     parser.removeErrorListeners();
@@ -45,7 +42,7 @@ int main(int , const char **) {
 
     tree::ParseTree *tree = parser.main();
 
-    std::cout << tree->toStringTree(&parser) << std::endl;
+    logger.log(tree->toStringTree(&parser), BianFuLog::Situation::WARNING);
 
     Scope globalScope = Scope();
     ExecuteVisitor executeVisitor = ExecuteVisitor(globalScope);

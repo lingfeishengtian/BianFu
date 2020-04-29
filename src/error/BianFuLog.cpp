@@ -19,7 +19,7 @@ void BianFuLog::internalLog(const std::string &s, std::string* colorCode) {
         std::wcout << wide << std::endl;
     #else
         if(colorCode != nullptr)
-            std::cout << "\033[" << colorCode << s << "\033[0m" << std::endl;
+            std::cout << "\033[" << *colorCode << "m" << s << "\033[0m" << std::endl;
         else
             std::cout << s << std::endl;
     #endif

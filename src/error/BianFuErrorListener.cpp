@@ -21,6 +21,7 @@ void BianFuErrorListener::syntaxError(Recognizer *recognizer, Token *offendingSy
     }else{
         std::cout << "\033[1;31m" << "蝙蝠没找到问题：" << msg << "\033[0m" << std::endl;
     }
+    std::cout << msg;
 }
 
 void BianFuErrorListener::reportAmbiguity(Parser *recognizer, const dfa::DFA &dfa, size_t startIndex,
