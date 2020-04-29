@@ -38,3 +38,11 @@ void BianFuLog::log(const std::string &s, BianFuLog::Situation situation) {
     std::string colorStr = std::to_string(1) + ";" + std::to_string(situation);
     internalLog(s, &colorStr);
 }
+
+void BianFuLog::log(int i) {
+    log(std::to_string(i));
+}
+
+void BianFuLog::log(double d) {
+    log(std::to_string(d));
+}

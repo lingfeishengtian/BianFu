@@ -100,6 +100,7 @@ expr: expr op=(Star | Divide) expr
     | OpenPar expr ClosePar
     | id = ID
     | <assoc = right> expr QuestionMark expr Colon expr
+    | FLOAT
     | INT
     | String
     | array

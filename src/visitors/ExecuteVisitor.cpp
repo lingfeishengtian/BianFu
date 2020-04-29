@@ -6,9 +6,10 @@
 
 #include "ExecuteVisitor.h"
 #include "ClassVisitor.h"
-#include "../scope/BFPrimitive.h"
+#include "../scope/primitives/BFIntPrimitive.h"
 #include "../error/BianFuLog.h"
 #include "../error/BianFuError.h"
+#include "../scope/primitives/BFFloatPrimitive.h"
 
 ExecuteVisitor::ExecuteVisitor(Scope s) {
     scope = &s;
@@ -39,6 +40,8 @@ antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
 //            try {
             Scope* p = visitExpr(ctx->expr()[1]);
             std::string id = ctx->expr()[0]->getText();
+            p->id = id;
+            p->parent = scope;
             scope->variables.insert(std::make_pair(id, p));
 //            }catch(std::exception e){
 //                logger.log(e.);
@@ -74,6 +77,8 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
             Scope* s1 = visitExpr(ctx->expr()[0]);
             Scope* s2 = visitExpr(ctx->expr()[1]);
             Scope* s3 = s1->useOperator(ctx->op->getText(), s2);
+
+            logger.log(dynamic_cast<BFFloatPrimitive*>(s3)->value);
             return s3;
         }
         case ParenthesisWrapped:{
@@ -82,10 +87,11 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
         case Identifier:
             return scope->variables[ctx->getText()];
         case Int:
-            int a = std::stoi(ctx->getText());
-            return static_cast<Scope*>(new BFPrimitive(BFPrimitive::Primitive::INT, a));
+            return static_cast<Scope*>(new BFIntPrimitive(BFIntPrimitive::Primitive::INT, std::stoi(ctx->getText())));
+        case Float:
+            return static_cast<Scope*>(new BFFloatPrimitive(std::stod(ctx->getText())));
 //        case String:
-//            return BFPrimitive(BFPrimitive::Primitive::INT, atoi(ctx->getText().c_str()));
+//            return BFIntPrimitive(BFIntPrimitive::Primitive::INT, atoi(ctx->getText().c_str()));
     }
     return Scope();
 }
@@ -95,6 +101,7 @@ ExecuteVisitor::ExpressionTypes ExecuteVisitor::identifyExpression(BFParser::Exp
     else if(ctx->OpenPar() != nullptr) return ParenthesisWrapped;
     else if(ctx->QuestionMark() != nullptr) return Ternary;
     else if(ctx->INT() != nullptr) return Int;
+    else if(ctx->FLOAT() != nullptr) return Float;
     else if(ctx->String() != nullptr) return String;
     else if(ctx->array() != nullptr) return Array;
     else if(ctx->id != nullptr) return Identifier;

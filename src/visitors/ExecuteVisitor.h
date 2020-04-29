@@ -27,6 +27,7 @@ private:
         ParenthesisWrapped,
         Ternary,
         Identifier,
+        Float,
         Int,
         String,
         Array

@@ -28,7 +28,8 @@ public:
     void log(const std::string&);
     void log(const std::string&, TextColor textColor);
     void log(const std::string&, Situation situation);
-
+    void log(int);
+    void log(double);
 private:
     void internalLog(const std::string&, std::string*);
 };

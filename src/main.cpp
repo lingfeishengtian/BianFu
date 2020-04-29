@@ -8,7 +8,7 @@
 #include "error/BianFuErrorListener.h"
 #include "error/BianFuError.h"
 #include "scope/Scope.h"
-#include "scope/BFPrimitive.h"
+#include "scope/primitives/BFIntPrimitive.h"
 #include "visitors/ExecuteVisitor.h"
 
 #ifdef _WIN32
@@ -24,7 +24,7 @@ int main(int , const char **) {
         std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("a = 2\nb = 4\n(a + b) * 4");
+    ANTLRInputStream input("a = 4\nb = 2.1\n(a / b) * 9.6\n类 三{}");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 

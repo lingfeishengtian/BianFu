@@ -71,10 +71,11 @@ OpenCurly: '{';
 CloseCurly: '}';
 QuestionMark: '?';
 Comma: ',';
-Dollar: '$' -> more, mode(Mode1);
+Dollar: '$';
 Ampersand: '&' -> type(DUMMY);
 
 INT: DIGIT+;
+FLOAT: INT Dot INT;
 ID: LETTER (LETTER | '0'..'9')*;
 
 String: '"' .*? '"';
@@ -83,8 +84,4 @@ fragment Baz: 'Baz';
 fragment LETTER : [a-zA-Z\u0080-\u{10FFFF}];
 fragment DIGIT : [0-9];
 
-mode Mode1;
 Dot: '.';
-
-mode Mode2;
-DotDot: '..';
