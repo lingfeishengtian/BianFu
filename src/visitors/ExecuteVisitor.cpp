@@ -42,17 +42,7 @@ antlrcpp::Any ExecuteVisitor::visitMain(BFParser::MainContext *ctx) {
 antlrcpp::Any ExecuteVisitor::visitStat(BFParser::StatContext *ctx) {
     switch(identifyStatement(ctx)){
         case Assign: {
-//            try {
-            Scope* p = visitExpr(ctx->assignment()->expr()[1]);
-            std::string id = ctx->assignment()->expr()[0]->getText();
-            p->id = id;
-            p->parent = scope;
-            scope->variables.insert(std::make_pair(id, p));
-//            }catch(std::exception e){
-//                logger.log(e.);
-//                //TODO: Handle error
-//            }
-            break;
+            return visitAssignment(ctx->assignment());
         }
         case Expression:{
             visitExpr(ctx->expr());
@@ -91,7 +81,7 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
         }
         case Identifier: {
             if (scope->variables.find(ctx->getText()) == scope->variables.end())
-                throw BianFuError(scope->trace(), "找不到变量" + ctx->getText());
+                throw BianFuError(scope->trace(), "第" + std::to_string(ctx->getStart()->getLine()) + "句有问题\n找不到变量" + ctx->getText());
             return scope->variables[ctx->getText()];
         }
         case Int:
@@ -126,4 +116,24 @@ antlrcpp::Any ExecuteVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsCo
         logger.log(static_cast<Scope*>(visitExpr(ctx->expr()))->to_string());
     }
     return nullptr;
+}
+
+antlrcpp::Any ExecuteVisitor::visitAssignment(BFParser::AssignmentContext *ctx) {
+    Scope* p = visitExpr(ctx->expr()[1]);
+    std::string id = ctx->expr()[0]->getText();
+    p->id = id;
+    p->parent = scope;
+    if(ctx->KVar() != nullptr) {
+        if (scope->variables.find(id) == scope->variables.end())
+            return scope->variables.insert(std::make_pair(id, p));
+        else
+            throw BianFuError(scope->trace(),
+                              "第" + std::to_string(ctx->getStart()->getLine()) + "句有问题\n" + ctx->getText() + "已存在。");
+    }else{
+        if (scope->variables.find(id) != scope->variables.end())
+            return scope->variables[id] = p;
+        else
+            throw BianFuError(scope->trace(),
+                              "第" + std::to_string(ctx->getStart()->getLine()) + "句有问题\n找不到" + ctx->getText() + "，不能再重新分配。");
+    }
 }

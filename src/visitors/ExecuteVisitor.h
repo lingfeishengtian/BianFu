@@ -37,8 +37,8 @@ private:
     BianFuLog logger = BianFuLog();
 
     antlrcpp::Any visitStat(BFParser::StatContext *ctx) override;
-
     antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
+    antlrcpp::Any visitAssignment(BFParser::AssignmentContext *ctx) override;
 
     StatementTypes identifyStatement(BFParser::StatContext *ctx);
     ExpressionTypes identifyExpression(BFParser::ExprContext *ctx);

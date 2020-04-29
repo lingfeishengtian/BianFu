@@ -99,7 +99,9 @@ stat: expr
     | flowControl
 ;
 
-assignment: KVar expr Equal expr;
+assignment: KVar expr Equal expr
+    | expr Equal expr
+;
 
 expr: expr op=(Star | Divide) expr
     | expr op=(Plus | Minus) expr
