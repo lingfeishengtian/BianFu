@@ -66,6 +66,7 @@ Semicolon: ';';
 Plus: '+';
 Minus: '-';
 Star: '*';
+Divide: '/';
 OpenPar: '(';
 ClosePar: ')';
 OpenCurly: '{';

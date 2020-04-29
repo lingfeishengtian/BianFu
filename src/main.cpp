@@ -6,6 +6,7 @@
 #include "BFParser.h"
 
 #include "error/BianFuErrorListener.h"
+#include "error/BianFuError.h"
 #include "scope/Scope.h"
 #include "scope/BFPrimitive.h"
 #include "visitors/ExecuteVisitor.h"
@@ -18,11 +19,16 @@
 using namespace antlr4;
 
 int main(int , const char **) {
+//    std::map<std::string, Scope*> map;
+//    BFPrimitive t = BFPrimitive(BFPrimitive::Primitive::INT, 9);
+//    map["te"] = &t;
+//    std::cout << map["te"]->getValueIfPrimitive();
     #ifdef _WIN32
         _setmode(_fileno(stdout), _O_U16TEXT);
+        std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("a = 3");
+    ANTLRInputStream input("a = 1\nb = 99\na + b * b");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 
@@ -43,12 +49,10 @@ int main(int , const char **) {
 
     Scope globalScope = Scope();
     ExecuteVisitor executeVisitor = ExecuteVisitor(globalScope);
-
-    #ifdef _WIN32
-        std::wcout << L"蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
-    #else
-        std::cout << "蝙蝠系统退出代码：" << static_cast<BFPrimitive>(executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree))).value << std::endl;
-    #endif
-
+    try{
+        executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree));
+    }catch (BianFuError &error){
+        error.logError();
+    }
     return 0;
 }

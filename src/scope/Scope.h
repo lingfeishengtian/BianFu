@@ -11,14 +11,19 @@
 
 class Scope{
 public:
-    Scope* parent;
-    std::map<std::string, Scope> classes;
-    std::map<std::string, Scope> functions;
-    std::map<std::string, Scope> variables;
+    std::string id;
+    Scope *parent;
+    std::map<std::string, Scope*> classes;
+    std::map<std::string, Scope*> functions;
+    std::map<std::string, Scope*> variables;
 
     Scope();
-    Scope(Scope* scope);
+    Scope(Scope*, const std::string&);
+
     bool isGlobal();
+    std::string trace();
+
+    virtual Scope *useOperator(const std::string&, Scope*);
 };
 
 

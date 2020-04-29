@@ -6,19 +6,22 @@
 
 #include "Scope.h"
 
-class BFPrimitive : Scope{
+class BFPrimitive : public Scope{
 public:
     enum Primitive{
         INT,
-        CHAR
+        CHAR,
+        BOOL
     };
 
     int value;
 
     Primitive primitiveType;
-    BFPrimitive(Primitive p, int val);
+    BFPrimitive(Primitive, int, const std::string&, Scope*);
+    BFPrimitive(Primitive, int);
 
     std::string to_string();
+    BFPrimitive* useOperator(const std::string&, Scope*) override;
 };
 
 

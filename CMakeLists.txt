@@ -12,5 +12,5 @@ file(GLOB generated gen/**.cpp)
 
 message(STATUS ${generated})
 
-add_executable(BianFu src/main.cpp ${generated} ${srcFiles})
+add_executable(BianFu src/main.cpp ${generated} ${srcFiles} src/error/BianFuLog.cpp src/error/BianFuLog.h src/error/BianFuError.cpp src/error/BianFuError.h)
 target_link_libraries(BianFu "${CMAKE_SOURCE_DIR}/antlr/libantlr4-runtime.a")

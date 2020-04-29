@@ -103,17 +103,14 @@ stat: expr Equal expr
     | flowControl
 ;
 
-expr: expr Star expr
-    | expr Plus expr
+expr: expr op=(Star | Divide) expr
+    | expr op=(Plus | Minus) expr
     | OpenPar expr ClosePar
     | <assoc = right> expr QuestionMark expr Colon expr
-    | <assoc = right> expr Equal expr
     | identifier = id
     | INT
     | String
     | array
-    | idarray
-    | emptyarr
 ;
 
 classDeclaration: KClass id block;
@@ -125,7 +122,6 @@ flowControl:
 ;
 
 id: ID;
-emptyarr: OpenCurly CloseCurly;
-array : OpenCurly el += expr (Comma el += expr)* CloseCurly;
-idarray : OpenCurly element += id (Comma element += id)* CloseCurly;
+array : OpenCurly el += expr (Comma el += expr)* CloseCurly
+    | OpenCurly CloseCurly;
 any: t = .;
