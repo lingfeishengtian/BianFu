@@ -85,10 +85,6 @@ unused2:
 	(unused[1] .)+ (Colon | Semicolon | Plus)? ~Semicolon
 ;
 
-block: OpenCurly stat+ CloseCurly
-    | OpenCurly CloseCurly
-;
-
 classStat: assignment
     | functionDeclaration
 ;
@@ -116,7 +112,7 @@ expr: expr op=(Star | Divide) expr
 defaultFunctions: FPrint OpenPar expr ClosePar
 ;
 
-classDeclaration: KClass id=ID block;
+classDeclaration: KClass id=ID OpenCurly classStat* CloseCurly;
 
 functionDeclaration: (KPublic | KPrivate) id=ID OpenPar el += functionParameter (Comma el += functionParameter)* ClosePar #FilledParamList
     | (KPublic | KPrivate) id=ID OpenPar ClosePar #EmptyParameterListFunc

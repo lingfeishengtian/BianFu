@@ -40,9 +40,10 @@ private:
     antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
     antlrcpp::Any visitAssignment(BFParser::AssignmentContext *ctx) override;
 
+    antlrcpp::Any visitClassStat(BFParser::ClassStatContext *ctx) override;
+
     StatementTypes identifyStatement(BFParser::StatContext *ctx);
     ExpressionTypes identifyExpression(BFParser::ExprContext *ctx);
-    void exit(int);
 public:
     antlrcpp::Any visitExpr(BFParser::ExprContext *ctx) override;
     antlrcpp::Any visitMain(BFParser::MainContext *ctx) override;

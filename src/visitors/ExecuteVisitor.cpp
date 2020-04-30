@@ -20,7 +20,7 @@ antlrcpp::Any ExecuteVisitor::visitClassDeclaration(BFParser::ClassDeclarationCo
     Scope* newClass = new Scope(scope, className);
     scope->classes.insert(std::make_pair(className, newClass));
     //ClassVisitor classVisitor = ClassVisitor(newClass);
-
+    ExecuteVisitor classExecuter = ExecuteVisitor(newClass)
     return newClass;
 }
 
@@ -136,4 +136,15 @@ antlrcpp::Any ExecuteVisitor::visitAssignment(BFParser::AssignmentContext *ctx) 
             throw BianFuError(scope->trace(),
                               "第" + std::to_string(ctx->getStart()->getLine()) + "句有问题\n找不到" + ctx->getText() + "，不能再重新分配。");
     }
+}
+
+antlrcpp::Any ExecuteVisitor::visitClassStat(BFParser::ClassStatContext *ctx) {
+    if(ctx->assignment() != nullptr){
+        if(ctx->assignment()->KVar() != nullptr){
+
+        }else{
+            //TODO: THROW ERROR
+        }
+    }
+    return BFParserBaseVisitor::visitClassStat(ctx);
 }

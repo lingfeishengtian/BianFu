@@ -8,7 +8,6 @@
 #include "error/BianFuErrorListener.h"
 #include "error/BianFuError.h"
 #include "scope/Scope.h"
-#include "scope/primitives/BFIntPrimitive.h"
 #include "visitors/ExecuteVisitor.h"
 
 #ifdef _WIN32
