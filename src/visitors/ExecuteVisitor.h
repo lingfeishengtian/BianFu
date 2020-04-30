@@ -12,7 +12,7 @@
 class ExecuteVisitor : BFParserBaseVisitor {
 public:
     Scope *scope;
-    explicit ExecuteVisitor(Scope s);
+    explicit ExecuteVisitor(Scope *s);
 
 private:
     enum StatementTypes{
@@ -29,8 +29,11 @@ private:
         Identifier,
         Float,
         Int,
+        Char,
+        CustomDeclare,
         String,
         Array,
+        DefaultFunctionCall,
         FunctionCall
     };
 
@@ -39,11 +42,12 @@ private:
     antlrcpp::Any visitStat(BFParser::StatContext *ctx) override;
     antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
     antlrcpp::Any visitAssignment(BFParser::AssignmentContext *ctx) override;
-
+    antlrcpp::Any visitFunctionDeclaration(BFParser::FunctionDeclarationContext *ctx) override;
     antlrcpp::Any visitClassStat(BFParser::ClassStatContext *ctx) override;
-
+    antlrcpp::Any visitBlock(BFParser::BlockContext *ctx) override;
     StatementTypes identifyStatement(BFParser::StatContext *ctx);
     ExpressionTypes identifyExpression(BFParser::ExprContext *ctx);
+
 public:
     antlrcpp::Any visitExpr(BFParser::ExprContext *ctx) override;
     antlrcpp::Any visitMain(BFParser::MainContext *ctx) override;

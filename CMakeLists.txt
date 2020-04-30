@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(antlr/antlr4-runtime/)
 include_directories(gen)
 
-file(GLOB srcFiles src/error/**.cpp src/scope/**.cpp src/scope/primitives/**.cpp src/visitors/**.cpp)
+file(GLOB srcFiles src/error/**.cpp src/scope/**.cpp src/scope/primitives/**.cpp src/scope/special/**.cpp src/visitors/**.cpp)
 file(GLOB generated gen/**.cpp)
 
 message(STATUS ${generated})

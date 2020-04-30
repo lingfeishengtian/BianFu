@@ -25,9 +25,10 @@ void BFIntPrimitive::setType(BFIntPrimitive::Primitive p) {
         case INT:
             type = "INT";
             break;
-        case CHAR:
+        case CHAR: {
             type = "CHAR";
             break;
+        }
         case BOOL:
             type = "BOOL";
             break;
@@ -35,7 +36,16 @@ void BFIntPrimitive::setType(BFIntPrimitive::Primitive p) {
 }
 
 std::string BFIntPrimitive::to_string() {
-    return std::to_string(value);
+    if(primitiveType == BOOL){
+        return value == 0 ? "非" : "是";
+    }else if(primitiveType == INT){
+        return std::to_string(value);
+    }else{
+        wchar_t wchar = (wchar_t) value;
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        std::string narrow = converter.to_bytes(wchar);
+        return narrow;
+    }
 }
 
 Scope* BFIntPrimitive::useOperator(const std::string &op, Scope *scope) {

@@ -89,6 +89,7 @@ FLOAT: INT Dot INT;
 ID: LETTER (LETTER | '0'..'9')*;
 
 String: '"' .*? '"';
+Char: '\'' .? '\'';
 
 fragment Baz: 'Baz';
 fragment LETTER : [a-zA-Z\u0080-\u{10FFFF}];

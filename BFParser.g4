@@ -95,12 +95,14 @@ stat: expr
     | flowControl
 ;
 
-assignment: KVar expr Equal expr
+//TODO: FIX SPECIFYING INT OR CLASS NAME
+assignment: (KVar | ID) expr Equal expr
     | expr Equal expr
 ;
 
 expr: expr op=(Star | Divide) expr
     | expr op=(Plus | Minus) expr
+    | expr Dot ID OpenPar ClosePar //TODO: ADD PARAMETER LIST SUPPORT LATER
     | OpenPar expr ClosePar
     | id = ID
     | <assoc = right> expr QuestionMark expr Colon expr
@@ -114,12 +116,17 @@ defaultFunctions: FPrint OpenPar expr ClosePar
 
 classDeclaration: KClass id=ID OpenCurly classStat* CloseCurly;
 
-functionDeclaration: (KPublic | KPrivate) id=ID OpenPar el += functionParameter (Comma el += functionParameter)* ClosePar #FilledParamList
-    | (KPublic | KPrivate) id=ID OpenPar ClosePar #EmptyParameterListFunc
-    | (type | ID | KVoid) functionDeclaration #FunctionWithSpecifiedReturnType
+//TODO: ADD CONSTRUCTORS
+functionDeclaration: id=ID OpenPar el += functionParameter (Comma el += functionParameter)* ClosePar block
+    | id=ID OpenPar ClosePar block
+    | (type | ID | KVoid) functionDeclaration
+    | (KPublic | KPrivate) functionDeclaration
 ;
 
-functionParameter: (type | ID) ID;
+block: OpenCurly stat+ CloseCurly;
+
+// SUPPORT no type, just ID: Defaults to any object type.
+functionParameter: (type | ID) ID | ID;
 
 operatorDeclaration: ; // WORK IN PROGRESS!!!!
 
@@ -132,6 +139,8 @@ flowControl:
 type : FLOAT
     | INT
     | String
+    | Char
+    | ID OpenPar ClosePar //TODO: Add parameter list!
 ;
 array : OpenCurly el += expr (Comma el += expr)* CloseCurly
     | OpenCurly CloseCurly;
