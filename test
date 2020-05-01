@@ -2,15 +2,16 @@
 source_filename = "asdf"
 
 @0 = private unnamed_addr constant [13 x i8] c"hello world!\00", align 1
+@1 = private unnamed_addr constant [14 x i8] c"Value is %d!\0A\00", align 1
 
 define void @main() {
 entrypoint:
   %a = alloca i8
   store i8 2, i8* %a
-  %0 = call i32 @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @0, i32 0, i32 0))
-  %a1 = load i8, i8* %a
-  %1 = call i32 @printf(i8* %a)
+  %0 = load i8, i8* %a
+  %1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @1, i32 0, i32 0), i8 %0)
+  %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @0, i32 0, i32 0))
   ret void
 }
 
-declare i32 @printf(i8*)
+declare i32 @printf(i8*, ...)

@@ -28,22 +28,28 @@ int main()
     builder.SetInsertPoint(entry);
 
     llvm::Value *helloWorld = builder.CreateGlobalStringPtr("hello world!");
+    llvm::Value *format = builder.CreateGlobalStringPtr("Value is %d!\n");
 
     std::vector<llvm::Type *> putsArgs;
     putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
     llvm::ArrayRef<llvm::Type*>  argsRef(putsArgs);
 
     llvm::FunctionType *putsType =
-            llvm::FunctionType::get(builder.getInt32Ty(), argsRef, false);
-    llvm::FunctionCallee putsFunc = module->getOrInsertFunction("printf", putsType);
+            llvm::FunctionType::get(builder.getInt32Ty(), argsRef, true);
+    llvm::FunctionCallee printf = module->getOrInsertFunction("printf", putsType);
 
     Type *i8 = builder.getInt8Ty();
     Value* val = ConstantInt::get(i8, 2);
     AllocaInst* alloc = builder.CreateAlloca(i8, 0, "a");
     StoreInst* store = builder.CreateStore(val, alloc);
+    LoadInst* loadedInt = builder.CreateLoad(i8, alloc);
 
-    builder.CreateCall(putsFunc, helloWorld);
-    builder.CreateCall(putsFunc, builder.CreateLoad(alloc, ""));
+    std::vector<llvm::Value*> test;
+    test.push_back(format);
+    test.push_back(loadedInt);
+
+    builder.CreateCall(printf, ArrayRef<Value*>(test));
+    builder.CreateCall(printf, helloWorld);
     builder.CreateRetVoid();
     module->print(llvm::outs(), nullptr);
 
