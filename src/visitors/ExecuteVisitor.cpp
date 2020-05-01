@@ -187,10 +187,11 @@ antlrcpp::Any ExecuteVisitor::visitFunctionDeclaration(BFParser::FunctionDeclara
 
 antlrcpp::Any ExecuteVisitor::visitBlock(BFParser::BlockContext *ctx) {
     for(auto stat : ctx->stat()){
-        antlrcpp::Any ret = visitStat(stat);
-        if(ret != nullptr){
-            return ret;
-        }
+        auto val = visitStat(stat);
+//        auto ret = dynamic_cast<Scope*>(&val);
+//        if(ret != nullptr){
+//            return ret;
+//        }
     }
     return nullptr;
 }
