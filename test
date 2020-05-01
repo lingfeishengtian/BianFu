@@ -1,0 +1,16 @@
+; ModuleID = 'asdf'
+source_filename = "asdf"
+
+@0 = private unnamed_addr constant [13 x i8] c"hello world!\00", align 1
+
+define void @main() {
+entrypoint:
+  %a = alloca i8
+  store i8 2, i8* %a
+  %0 = call i32 @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @0, i32 0, i32 0))
+  %a1 = load i8, i8* %a
+  %1 = call i32 @printf(i8* %a)
+  ret void
+}
+
+declare i32 @printf(i8*)
