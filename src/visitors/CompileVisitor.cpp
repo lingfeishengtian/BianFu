@@ -11,6 +11,16 @@ static llvm::LLVMContext context;
 llvm::Module *module;
 llvm::IRBuilder<> builder(context);
 
+CompileVisitor::CompileVisitor() {
+    module = new llvm::Module("main", context);
+    scope = new CompilerScope();
+}
+
+CompileVisitor::CompileVisitor(std::string modName, CompilerScope* s) {
+    module = new llvm::Module(modName, context);
+    scope = s;
+}
+
 antlrcpp::Any CompileVisitor::visitMain(BFParser::MainContext *ctx) {
     logger.log("开始汇编蝙蝠程序。");
 
@@ -52,15 +62,6 @@ antlrcpp::Any CompileVisitor::visitExpr(BFParser::ExprContext *ctx) {
         return visitTypeDef(ctx->typeDef());
     }
     return BFParserBaseVisitor::visitExpr(ctx);
-}
-
-CompileVisitor::CompileVisitor() {
-    module = new llvm::Module("main", context);
-}
-
-CompileVisitor::CompileVisitor(std::string modName, CompilerScope* s) {
-    module = new llvm::Module(modName, context);
-    scope = s;
 }
 
 antlrcpp::Any CompileVisitor::visitAssignment(BFParser::AssignmentContext *ctx) {

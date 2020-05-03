@@ -4,11 +4,13 @@ project(BianFu)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(LLVM REQUIRED CONFIG PATHS thirdparty/llvm/lib/cmake/llvm)
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
 include(ExternalAntlr4Cpp)
 include_directories(${ANTLR4_INCLUDE_DIRS})
 add_definitions(-DANTLR4CPP_STATIC)
 include_directories(${ANTLR4_INCLUDE_DIRS})
+
+find_package(ANTLR REQUIRED)
 ENDIF()
 
 set(CMAKE_CXX_STANDARD 14)
@@ -19,7 +21,6 @@ include_directories(gen)
 
 set(ANTLR_EXECUTABLE /usr/share/java/antlr-4.8-complete.jar)
 
-find_package(ANTLR REQUIRED)
 link_directories(${CMAKE_SOURCE_DIR}/thirdparty/antlr/)
 
 file(GLOB srcFiles src/error/**.cpp src/scope/**.cpp src/scope/primitives/**.cpp src/scope/special/**.cpp src/visitors/**.cpp)
