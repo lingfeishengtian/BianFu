@@ -43,11 +43,11 @@ antlrcpp::Any CompileVisitor::visitMain(BFParser::MainContext *ctx) {
         visitStat(stat);
     }
 
+    builder.CreateRetVoid();
+
     module->print(llvm::outs(), nullptr);
-
     logger.log("程序汇编结束。");
-
-    return BFParserBaseVisitor::visitMain(ctx);
+    return nullptr;
 }
 
 antlrcpp::Any CompileVisitor::visitStat(BFParser::StatContext *ctx) {
@@ -77,10 +77,12 @@ antlrcpp::Any CompileVisitor::visitAssignment(BFParser::AssignmentContext *ctx) 
         builder.CreateStore(retVal, allocated);
         std::string name = ctx->expr()[0]->getText();
         logger.log(name);
-        scope->variables[name] = allocated;
+        scope->variables.insert(std::make_pair(name, allocated));
     } catch (std::bad_cast&) {
         logger.log("找不到" + ctx->expr()[0]->getText());
     }
+
+    return nullptr;
 }
 
 antlrcpp::Any CompileVisitor::visitTypeDef(BFParser::TypeDefContext *ctx) {

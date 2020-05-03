@@ -4,6 +4,8 @@ project(BianFu)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(LLVM REQUIRED CONFIG PATHS thirdparty/llvm/lib/cmake/llvm)
 
+set(ANTLR_EXECUTABLE /usr/share/java/antlr-4.8-complete.jar)
+
 if(UNIX AND NOT APPLE)
 include(ExternalAntlr4Cpp)
 include_directories(${ANTLR4_INCLUDE_DIRS})
@@ -18,8 +20,6 @@ include_directories(thirdparty/antlr/include)
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(gen)
-
-set(ANTLR_EXECUTABLE /usr/share/java/antlr-4.8-complete.jar)
 
 link_directories(${CMAKE_SOURCE_DIR}/thirdparty/antlr/)
 
