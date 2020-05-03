@@ -1,56 +1,54 @@
+#include <string>
+#include <vector>
 #include <iostream>
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/SectionMemoryManager.h"
-#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
-#include "llvm/Support/TargetSelect.h"
+#include "antlr4-runtime.h"
 
-// Optimizations
-#include "llvm/Transforms/Scalar.h"
-#include "llvm/Analysis/BasicAliasAnalysis.h"
+#include "BFLexer.h"
+#include "BFParser.h"
 
-using namespace llvm;
+#include "error/BianFuErrorListener.h"
+#include "error/BianFuError.h"
+#include "scope/Scope.h"
+#include "visitors/ExecuteVisitor.h"
+#include "visitors/CompileVisitor.h"
 
-int main()
-{
-    static llvm::LLVMContext context;
-    llvm::Module *module = new llvm::Module("asdf", context);
-    llvm::IRBuilder<> builder(context);
+using namespace antlr4;
 
-    llvm::FunctionType *funcType = llvm::FunctionType::get(builder.getVoidTy(), false);
-    llvm::Function *mainFunc =
-            llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module);
-    llvm::BasicBlock *entry = llvm::BasicBlock::Create(context, "entrypoint", mainFunc);
-    builder.SetInsertPoint(entry);
+int main(int , const char **) {
+    #ifdef _WIN32
+        _setmode(_fileno(stdout), _O_U16TEXT);
+        std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
+    #endif
 
-    llvm::Value *helloWorld = builder.CreateGlobalStringPtr("hello world!");
-    llvm::Value *format = builder.CreateGlobalStringPtr("Value is %d!\n");
+    ANTLRInputStream input("变量 阿 = 34");
+    BFLexer lexer(&input);
+    CommonTokenStream tokens(&lexer);
 
-    std::vector<llvm::Type *> putsArgs;
-    putsArgs.push_back(builder.getInt8Ty()->getPointerTo());
-    llvm::ArrayRef<llvm::Type*>  argsRef(putsArgs);
+    BianFuLog logger = BianFuLog();
+    BianFuErrorListener bianFuErrorListener = BianFuErrorListener();
 
-    llvm::FunctionType *putsType =
-            llvm::FunctionType::get(builder.getInt32Ty(), argsRef, true);
-    llvm::FunctionCallee printf = module->getOrInsertFunction("printf", putsType);
+    tokens.fill();
+    for (auto token : tokens.getTokens()) {
+        std::cout << token->toString() << " " << std::endl;
+    }
 
-    Type *i8 = builder.getInt8Ty();
-    Value* val = ConstantInt::get(i8, 2);
-    AllocaInst* alloc = builder.CreateAlloca(i8, 0, "a");
-    StoreInst* store = builder.CreateStore(val, alloc);
-    LoadInst* loadedInt = builder.CreateLoad(i8, alloc);
+    BFParser parser(&tokens);
+    parser.removeErrorListeners();
+    parser.addErrorListener(&bianFuErrorListener);
 
-    std::vector<llvm::Value*> test;
-    test.push_back(format);
-    test.push_back(loadedInt);
+    tree::ParseTree *tree = parser.main();
 
-    builder.CreateCall(printf, ArrayRef<Value*>(test));
-    builder.CreateCall(printf, helloWorld);
-    builder.CreateRetVoid();
-    module->print(llvm::outs(), nullptr);
+    logger.log(tree->toStringTree(&parser), BianFuLog::Situation::WARNING);
 
+    Scope globalScope = Scope();
+    CompileVisitor executeVisitor = CompileVisitor();
+    try{
+        executeVisitor.visitMain(dynamic_cast<BFParser::MainContext *>(tree));
+    }catch (BianFuError &error){
+        error.logError();
+        logger.log("蝙蝠程序失败", BianFuLog::Situation::ERROR);
+    }
+
+    return 0;
 }

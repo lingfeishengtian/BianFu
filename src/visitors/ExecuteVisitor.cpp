@@ -105,7 +105,7 @@ antlrcpp::Any ExecuteVisitor::visitExpr(BFParser::ExprContext *ctx) {
         case DefaultFunctionCall:
             return visitDefaultFunctions(ctx->defaultFunctions());
         case CustomDeclare: {
-            Scope* scopeRet = scope->getScopeFromRegisteredType(ctx->type()->ID()->getText());
+            Scope* scopeRet = scope->getScopeFromRegisteredType(ctx->typeDef()->ID()->getText());
             return scopeRet->clone();
         }case FunctionCall:{
             Scope* s1 = visitExpr(ctx->expr()[0]);
@@ -124,11 +124,11 @@ ExecuteVisitor::ExpressionTypes ExecuteVisitor::identifyExpression(BFParser::Exp
     else if(ctx->Dot() != nullptr) return FunctionCall;
     else if(ctx->OpenPar() != nullptr) return ParenthesisWrapped;
     else if(ctx->QuestionMark() != nullptr) return Ternary;
-    else if(ctx->type() != nullptr) {
-        if (ctx->type()->INT() != nullptr) return Int;
-        else if (ctx->type()->FLOAT() != nullptr) return Float;
-        else if (ctx->type()->String() != nullptr) return String;
-        else if(ctx->type()->Char() != nullptr) return Char;
+    else if(ctx->typeDef() != nullptr) {
+        if (ctx->typeDef()->INT() != nullptr) return Int;
+        else if (ctx->typeDef()->FLOAT() != nullptr) return Float;
+        else if (ctx->typeDef()->String() != nullptr) return String;
+        else if(ctx->typeDef()->Char() != nullptr) return Char;
         else return CustomDeclare;
     }
     else if(ctx->array() != nullptr) return Array;

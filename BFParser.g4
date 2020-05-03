@@ -68,7 +68,7 @@ void doAfter() {}
 @parser::basevisitordefinitions {/* base visitor definitions section */}
 
 // Actual grammar start.
-main: stat+ EOF;
+main: stat* EOF;
 
 // Unused rule to demonstrate some of the special features.
 unused[double input = 111] returns [double calculated] locals [int _a, double _b, int _c] @init{ doInit(); } @after { doAfter(); } :
@@ -106,7 +106,7 @@ expr: expr op=(Star | Divide) expr
     | OpenPar expr ClosePar
     | id = ID
     | <assoc = right> expr QuestionMark expr Colon expr
-    | type
+    | typeDef
     | array
     | defaultFunctions
 ;
@@ -119,14 +119,15 @@ classDeclaration: KClass id=ID OpenCurly classStat* CloseCurly;
 //TODO: ADD CONSTRUCTORS
 functionDeclaration: id=ID OpenPar el += functionParameter (Comma el += functionParameter)* ClosePar block
     | id=ID OpenPar ClosePar block
-    | (type | ID | KVoid) functionDeclaration
+    | (typeDef | ID | KVoid) functionDeclaration
     | (KPublic | KPrivate) functionDeclaration
 ;
 
 block: OpenCurly stat+ CloseCurly;
 
 // SUPPORT no type, just ID: Defaults to any object type.
-functionParameter: (type | ID) ID | ID;
+//TODO: Change TYPE to KType because you're searching for keywords!
+functionParameter: (typeDef | ID) ID | ID;
 
 operatorDeclaration: ; // WORK IN PROGRESS!!!!
 
@@ -136,7 +137,9 @@ flowControl:
 	| Continue # Continue
 ;
 
-type : FLOAT
+typeKeywords: ;
+
+typeDef : FLOAT
     | INT
     | String
     | Char
