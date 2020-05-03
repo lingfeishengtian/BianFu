@@ -21,6 +21,9 @@
 class CompileVisitor : BFParserBaseVisitor{
 public:
     BianFuLog logger = BianFuLog();
+    static std::map<std::string, llvm::FunctionCallee> systemFunctions;
+    static std::map<std::string, llvm::Value*> systemStrings;
+
     CompileVisitor();
     CompileVisitor(std::string modName, CompilerScope* s);
 
@@ -34,6 +37,7 @@ private:
     antlrcpp::Any visitExpr(BFParser::ExprContext *ctx) override;
     antlrcpp::Any visitAssignment(BFParser::AssignmentContext *ctx) override;
     antlrcpp::Any visitTypeDef(BFParser::TypeDefContext *ctx) override;
+    antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
 };
 
 

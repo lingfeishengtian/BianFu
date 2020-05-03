@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <signal.h>
 
 #include "antlr4-runtime.h"
 
@@ -14,6 +15,13 @@
 #include "visitors/CompileVisitor.h"
 
 using namespace antlr4;
+BianFuLog logger = BianFuLog();
+
+void handleSIGILL(int sig){
+    logger.log("程序出问题，清发给开发人: A return type was probably not found. A SIGILL fault occurred. Use debug to trace this error. Exit code: " + std::to_string(sig),
+            BianFuLog::Situation::ERROR);
+    exit(sig);
+}
 
 int main(int , const char **) {
     #ifdef _WIN32
@@ -21,12 +29,12 @@ int main(int , const char **) {
         std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("变量 阿 = 34");
+    ANTLRInputStream input("变量 阿 = 34.2\n出(阿)");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 
-    BianFuLog logger = BianFuLog();
     BianFuErrorListener bianFuErrorListener = BianFuErrorListener();
+    signal(SIGILL, handleSIGILL);
 
     tokens.fill();
     for (auto token : tokens.getTokens()) {

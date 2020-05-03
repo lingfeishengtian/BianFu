@@ -6,8 +6,9 @@
 
 CompilerScope::CompilerScope() {}
 
-CompilerScope::CompilerScope(std::string n) {
+CompilerScope::CompilerScope(std::string n, CompilerScope* p) {
     name = n;
+    parent = p;
 }
 
 bool CompilerScope::isGlobal() {

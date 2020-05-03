@@ -7,6 +7,9 @@
 #include "CompileVisitor.h"
 #include "../error/BianFuError.h"
 
+std::map<std::string, llvm::FunctionCallee> CompileVisitor::systemFunctions;
+std::map<std::string, llvm::Value*> CompileVisitor::systemStrings;
+
 static llvm::LLVMContext context;
 llvm::Module *module;
 llvm::IRBuilder<> builder(context);
@@ -38,6 +41,11 @@ antlrcpp::Any CompileVisitor::visitMain(BFParser::MainContext *ctx) {
     llvm::FunctionType *putsType =
             llvm::FunctionType::get(builder.getInt32Ty(), argsRef, true);
     llvm::FunctionCallee printf = module->getOrInsertFunction("printf", putsType);
+    CompileVisitor::systemFunctions["printf"] = printf;
+
+    CompileVisitor::systemStrings["newLine"] = builder.CreateGlobalStringPtr("\n");
+    CompileVisitor::systemStrings["intPrint"] = builder.CreateGlobalStringPtr("%d");
+    CompileVisitor::systemStrings["doublePrint"] = builder.CreateGlobalStringPtr("%f");
 
     for (auto* stat : ctx->stat()){
         visitStat(stat);
@@ -60,12 +68,20 @@ antlrcpp::Any CompileVisitor::visitStat(BFParser::StatContext *ctx) {
 antlrcpp::Any CompileVisitor::visitExpr(BFParser::ExprContext *ctx) {
     if(ctx->typeDef() != nullptr){
         return visitTypeDef(ctx->typeDef());
+    }else if(ctx->defaultFunctions() != nullptr){
+        return visitDefaultFunctions(ctx->defaultFunctions());
+    }else if(ctx->id != nullptr){
+        if(scope->variables.count(ctx->id->getText())){
+            llvm::AllocaInst* allocated = static_cast<llvm::AllocaInst*>(scope->variables[ctx->id->getText()]);
+            llvm::LoadInst* loaded = builder.CreateLoad(allocated);
+            return static_cast<llvm::Value*>(loaded);
+        }else throw BianFuError("", ctx->id->getText() + " 不存在。");
     }
-    return BFParserBaseVisitor::visitExpr(ctx);
+    return nullptr;
 }
 
 antlrcpp::Any CompileVisitor::visitAssignment(BFParser::AssignmentContext *ctx) {
-    logger.log(ctx->getText() + " 是 " + " assignment.");
+    logger.log(ctx->getText() + " 是 " + "assignment.");
 
     try{
         logger.log(ctx->getText());
@@ -87,7 +103,31 @@ antlrcpp::Any CompileVisitor::visitAssignment(BFParser::AssignmentContext *ctx) 
 
 antlrcpp::Any CompileVisitor::visitTypeDef(BFParser::TypeDefContext *ctx) {
     if(ctx->INT() != nullptr){
-        logger.log(ctx->getText() + " 是 " + " int.");
+        logger.log(ctx->getText() + " 是 " + "int.");
         return static_cast<llvm::Value*>(llvm::ConstantInt::get(builder.getInt64Ty(), std::stoi(ctx->INT()->getText())));
+    }else if(ctx->FLOAT() != nullptr){
+        logger.log(ctx->getText() + " 是 " + "float.");
+        return static_cast<llvm::Value*>(llvm::ConstantFP::get(builder.getDoubleTy(), std::stod(ctx->FLOAT()->getText())));
     }
+}
+
+antlrcpp::Any CompileVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) {
+    if(ctx->FPrint() != nullptr){
+        if(ctx->expr() != nullptr){
+            llvm::Value* val = (visitExpr(ctx->expr()));
+            std::vector<llvm::Value *> arrArgs;
+            if(val->getType()->isIntegerTy()) {
+                arrArgs.push_back(systemStrings["intPrint"]);
+            }else if(val->getType()->isDoubleTy()){
+                arrArgs.push_back(systemStrings["doublePrint"]);
+            }
+            //TODO: Create a printf compiler that visits the expressions and based on the expressions, create a format string. For example, 出("A" + 32) will become printf("%s%d", ${a variable}, ${int val})
+            arrArgs.push_back(val);
+            builder.CreateCall(CompileVisitor::systemFunctions["printf"], arrArgs);
+        }else{
+            builder.CreateCall(CompileVisitor::systemFunctions["printf"], systemStrings["newLine"]);
+        }
+    }
+
+    return nullptr;
 }

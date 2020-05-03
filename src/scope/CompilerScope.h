@@ -11,11 +11,14 @@
 
 class CompilerScope {
 public:
-    std::map<std::string, llvm::AllocaInst*> variables;
+    CompilerScope* parent;
+
+    std::map<std::string, llvm::Value*> variables;
+    std::map<std::string, llvm::Function> functions;
     std::string name;
 
     CompilerScope();
-    explicit CompilerScope(std::string n);
+    explicit CompilerScope(std::string n, CompilerScope* p);
 
     bool isGlobal();
 };

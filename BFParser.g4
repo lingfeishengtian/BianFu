@@ -112,6 +112,7 @@ expr: expr op=(Star | Divide) expr
 ;
 
 defaultFunctions: FPrint OpenPar expr ClosePar
+    | FPrint OpenPar ClosePar
 ;
 
 classDeclaration: KClass id=ID OpenCurly classStat* CloseCurly;

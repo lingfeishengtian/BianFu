@@ -1,10 +1,16 @@
 ; ModuleID = 'main'
 source_filename = "main"
 
+@0 = private unnamed_addr constant [2 x i8] c"\0A\00", align 1
+@1 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+@2 = private unnamed_addr constant [3 x i8] c"%f\00", align 1
+
 define void @main() {
 entrypoint:
-  %0 = alloca i64
-  store i64 34, i64* %0
+  %0 = alloca double
+  store double 3.420000e+01, double* %0
+  %1 = load double, double* %0
+  %2 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @2, i32 0, i32 0), double %1)
   ret void
 }
 
