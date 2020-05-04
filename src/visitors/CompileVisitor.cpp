@@ -54,8 +54,16 @@ antlrcpp::Any CompileVisitor::visitMain(BFParser::MainContext *ctx) {
 
     builder.CreateRetVoid();
 
-    module->print(llvm::outs(), nullptr);
-    logger.log("程序汇编结束。");
+    std::string OutputFilename = "test.bc";
+    llvm::raw_ostream *out = &llvm::outs();
+    if (OutputFilename != "-") {
+        std::error_code EC;
+        out = new llvm::raw_fd_ostream(OutputFilename, EC, llvm::sys::fs::F_None);
+    }
+    module->print(*out, nullptr);
+
+    logger.log("程序汇编结束。\n开始程序：\n\n");
+    system("lli test.bc");
     return nullptr;
 }
 
@@ -80,7 +88,7 @@ antlrcpp::Any CompileVisitor::visitExpr(BFParser::ExprContext *ctx) {
                     llvm::LoadInst *loaded = builder.CreateLoad(allocatedType, allocated);
                     return static_cast<llvm::Value *>(loaded);
             }else{
-                return static_cast<llvm::Value *>(allocated);
+                return static_cast<llvm::AllocaInst *>(allocated);
             }
         }else throw BianFuError("", ctx->id->getText() + " 不存在。");
     }else if(ctx->op != nullptr){
@@ -165,19 +173,35 @@ antlrcpp::Any CompileVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsCo
         //TODO: Learn how to concatenate strings! *hint: strcat with c api
         if(ctx->expr() != nullptr){
             std::vector<llvm::Value *> arrArgs;
+            antlrcpp::Any val = visitExpr(ctx->expr());
             try {
-                llvm::Value *val = (visitExpr(ctx->expr()));
-                if (val->getType()->isIntegerTy()) {
-                    arrArgs.push_back(systemStrings["intPrint"]);
-                } else if (val->getType()->isDoubleTy()) {
-                    arrArgs.push_back(systemStrings["doublePrint"]);
-                }else{
-                    arrArgs.push_back(systemStrings["strPrint"]);
-                }
-                arrArgs.push_back(val);
-            } catch (std::bad_cast&) {
+                llvm::AllocaInst* allocatedVal = val.as<llvm::AllocaInst*>();
+
+                /// C Strings automatically put 0 at the end of strings when printing them so the formatting is correct.
+                /// Here I do that automatically too by creating a new variable and bitcasting it to an array with a size one higher than the current one.
+                /// Finally I assign the last index -> 0 and it'll fix the null recognition automatically put by c strings.
+                int currArrSize = allocatedVal->getAllocatedType()->getArrayNumElements();
+                llvm::ArrayType* arrType = llvm::ArrayType::get(allocatedVal->getAllocatedType()->getArrayElementType(), currArrSize + 1);
+                llvm::Value* retCast = builder.CreateBitCast(allocatedVal, arrType->getPointerTo());
+
+                std::vector<llvm::Value*> getArrArgs;
+                getArrArgs.push_back(llvm::ConstantInt::get(builder.getInt8Ty(), 0));
+                getArrArgs.push_back(llvm::ConstantInt::get(builder.getInt8Ty(), currArrSize));
+
+                llvm::Value *indexPointer = builder.CreateInBoundsGEP(retCast, llvm::ArrayRef<llvm::Value *>(getArrArgs));
+                builder.CreateStore(llvm::ConstantInt::get(builder.getInt8Ty(), 0), indexPointer);
+
                 arrArgs.push_back(systemStrings["strPrint"]);
-                arrArgs.push_back(static_cast<llvm::AllocaInst*>(visitExpr(ctx->expr())));
+                arrArgs.push_back(retCast);
+            } catch (std::bad_cast&) {
+                llvm::Value* castVal = val.as<llvm::Value*>();
+
+                if (castVal->getType()->isIntegerTy()) {
+                    arrArgs.push_back(systemStrings["intPrint"]);
+                } else if (castVal->getType()->isDoubleTy()) {
+                    arrArgs.push_back(systemStrings["doublePrint"]);
+                }
+                arrArgs.push_back(castVal);
             }
             builder.CreateCall(CompileVisitor::systemFunctions["printf"], arrArgs);
         }else{
@@ -233,10 +257,11 @@ antlrcpp::Any CompileVisitor::visitArray(BFParser::ArrayContext *ctx) {
         getArrArgs.push_back(llvm::ConstantInt::get(arrIndTy, i));
 
         llvm::Value *indexPointer = builder.CreateInBoundsGEP(arrAlloc, llvm::ArrayRef<llvm::Value *>(getArrArgs));
-        if(ctx->expr()[i]->typeDef() != nullptr) {
-            expressionVisited->mutateType(finType);
-            builder.CreateStore(expressionVisited, indexPointer);
-        }else if(expressionVisited->getType()->isIntegerTy()){
+//        if(ctx->expr()[i]->typeDef() != nullptr) {
+//            expressionVisited->mutateType(finType);
+//            builder.CreateStore(expressionVisited, indexPointer);
+//        }else
+        if(expressionVisited->getType()->isIntegerTy()){
             builder.CreateStore(builder.CreateIntCast(expressionVisited, finType, false), indexPointer);
         }else{
             builder.CreateStore(expressionVisited, indexPointer);
