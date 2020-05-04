@@ -38,6 +38,13 @@ private:
     antlrcpp::Any visitAssignment(BFParser::AssignmentContext *ctx) override;
     antlrcpp::Any visitTypeDef(BFParser::TypeDefContext *ctx) override;
     antlrcpp::Any visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) override;
+    antlrcpp::Any visitClassStat(BFParser::ClassStatContext *ctx) override;
+    antlrcpp::Any visitClassDeclaration(BFParser::ClassDeclarationContext *ctx) override;
+    antlrcpp::Any visitFunctionDeclaration(BFParser::FunctionDeclarationContext *ctx) override;
+    antlrcpp::Any visitBlock(BFParser::BlockContext *ctx) override;
+    antlrcpp::Any visitArray(BFParser::ArrayContext *ctx) override;
+
+    llvm::Value* opDoubles(llvm::Value* f, llvm::Value* s, std::string op);
 };
 
 

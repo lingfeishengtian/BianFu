@@ -29,7 +29,7 @@ int main(int , const char **) {
         std::wcout << L"蝙蝠Windows版没有字体颜色。抱歉。" << std::endl;
     #endif
 
-    ANTLRInputStream input("变量 阿 = 34.2\n出(阿)");
+    ANTLRInputStream input("变量 t = 'j'\n变量 从 = {'H', 'P', t, 2}\n变量 阿 = 34.2\n变量 不 = 4\n出(2 + 5.1)\n出()\n出(从)\n出()");
     BFLexer lexer(&input);
     CommonTokenStream tokens(&lexer);
 

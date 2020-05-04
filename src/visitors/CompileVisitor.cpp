@@ -46,6 +46,7 @@ antlrcpp::Any CompileVisitor::visitMain(BFParser::MainContext *ctx) {
     CompileVisitor::systemStrings["newLine"] = builder.CreateGlobalStringPtr("\n");
     CompileVisitor::systemStrings["intPrint"] = builder.CreateGlobalStringPtr("%d");
     CompileVisitor::systemStrings["doublePrint"] = builder.CreateGlobalStringPtr("%f");
+    CompileVisitor::systemStrings["strPrint"] = builder.CreateGlobalStringPtr("%s");
 
     for (auto* stat : ctx->stat()){
         visitStat(stat);
@@ -72,10 +73,44 @@ antlrcpp::Any CompileVisitor::visitExpr(BFParser::ExprContext *ctx) {
         return visitDefaultFunctions(ctx->defaultFunctions());
     }else if(ctx->id != nullptr){
         if(scope->variables.count(ctx->id->getText())){
+            logger.log(ctx->getText());
             llvm::AllocaInst* allocated = static_cast<llvm::AllocaInst*>(scope->variables[ctx->id->getText()]);
-            llvm::LoadInst* loaded = builder.CreateLoad(allocated);
-            return static_cast<llvm::Value*>(loaded);
+            llvm::Type* allocatedType = allocated->getAllocatedType();
+            if(allocatedType->isIntegerTy() || allocatedType->isDoubleTy()) {
+                    llvm::LoadInst *loaded = builder.CreateLoad(allocatedType, allocated);
+                    return static_cast<llvm::Value *>(loaded);
+            }else{
+                return static_cast<llvm::Value *>(allocated);
+            }
         }else throw BianFuError("", ctx->id->getText() + " 不存在。");
+    }else if(ctx->op != nullptr){
+        llvm::Value* first = visitExpr(ctx->expr()[0]);
+        llvm::Value* second = visitExpr(ctx->expr()[1]);
+
+        llvm::Type* typeF = first->getType();
+        llvm::Type* typeS = second->getType();
+
+        if(typeF->isDoubleTy() && typeS->isIntegerTy()){
+            llvm::Value* casted = builder.CreateSIToFP(second, builder.getDoubleTy());
+            return opDoubles(first, casted, ctx->op->getText());
+        }else if(typeF->isIntegerTy() && typeS->isDoubleTy()){
+            llvm::Value* casted = builder.CreateSIToFP(first, builder.getDoubleTy());
+            return opDoubles(casted, second, ctx->op->getText());
+        }else{
+
+        }
+    }else if(ctx->array() != nullptr){
+        llvm::AllocaInst* allocaInst = visitArray(ctx->array());
+        return allocaInst;
+    }
+    return nullptr;
+}
+
+llvm::Value *CompileVisitor::opDoubles(llvm::Value *f, llvm::Value *s, std::string op) {
+    if(op == "+"){
+        return builder.CreateFAdd(f, s);
+    }else if(op == "-"){
+        return builder.CreateFSub(f, s);
     }
     return nullptr;
 }
@@ -88,9 +123,16 @@ antlrcpp::Any CompileVisitor::visitAssignment(BFParser::AssignmentContext *ctx) 
 //        if(ctx->KVar() != nullptr && scope->variables.find(ctx->expr()[0]->getText()) != scope->variables.end()) throw BianFuError("", "变量已存在！");
 //        if(ctx->KVar() == nullptr && scope->variables.find(ctx->expr()[0]->getText()) == scope->variables.end()) throw BianFuError("", "变量不存在！");
 
-        auto* retVal = static_cast<llvm::Value*>(visitExpr(ctx->expr()[1]));
-        llvm::AllocaInst* allocated = builder.CreateAlloca(retVal->getType());
-        builder.CreateStore(retVal, allocated);
+        llvm::AllocaInst* allocated;
+        antlrcpp::Any ret = visitExpr(ctx->expr()[1]);
+        try {
+            llvm::AllocaInst* allocaInst = ret.as<llvm::AllocaInst*>();
+            allocated = allocaInst;
+        } catch (std::bad_cast&) {
+            llvm::Value* val = ret.as<llvm::Value*>();
+            allocated = builder.CreateAlloca(val->getType());
+            builder.CreateStore(val, allocated);
+        }
         std::string name = ctx->expr()[0]->getText();
         logger.log(name);
         scope->variables.insert(std::make_pair(name, allocated));
@@ -108,21 +150,35 @@ antlrcpp::Any CompileVisitor::visitTypeDef(BFParser::TypeDefContext *ctx) {
     }else if(ctx->FLOAT() != nullptr){
         logger.log(ctx->getText() + " 是 " + "float.");
         return static_cast<llvm::Value*>(llvm::ConstantFP::get(builder.getDoubleTy(), std::stod(ctx->FLOAT()->getText())));
+    }else if(ctx->String() != nullptr){
+        logger.log(ctx->getText() + " 是 " + "字母.");
+
+    }else if(ctx->Char() != nullptr){
+        if(ctx->Char()->getText().size() > 3) throw BianFuError("", "字太大了！");
+        logger.log(ctx->getText() + " 是 " + "字.");
+        return static_cast<llvm::Value*>(llvm::ConstantInt::get(builder.getInt8Ty(), ctx->Char()->getText().at(1)));
     }
 }
 
 antlrcpp::Any CompileVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsContext *ctx) {
     if(ctx->FPrint() != nullptr){
+        //TODO: Learn how to concatenate strings! *hint: strcat with c api
         if(ctx->expr() != nullptr){
-            llvm::Value* val = (visitExpr(ctx->expr()));
             std::vector<llvm::Value *> arrArgs;
-            if(val->getType()->isIntegerTy()) {
-                arrArgs.push_back(systemStrings["intPrint"]);
-            }else if(val->getType()->isDoubleTy()){
-                arrArgs.push_back(systemStrings["doublePrint"]);
+            try {
+                llvm::Value *val = (visitExpr(ctx->expr()));
+                if (val->getType()->isIntegerTy()) {
+                    arrArgs.push_back(systemStrings["intPrint"]);
+                } else if (val->getType()->isDoubleTy()) {
+                    arrArgs.push_back(systemStrings["doublePrint"]);
+                }else{
+                    arrArgs.push_back(systemStrings["strPrint"]);
+                }
+                arrArgs.push_back(val);
+            } catch (std::bad_cast&) {
+                arrArgs.push_back(systemStrings["strPrint"]);
+                arrArgs.push_back(static_cast<llvm::AllocaInst*>(visitExpr(ctx->expr())));
             }
-            //TODO: Create a printf compiler that visits the expressions and based on the expressions, create a format string. For example, 出("A" + 32) will become printf("%s%d", ${a variable}, ${int val})
-            arrArgs.push_back(val);
             builder.CreateCall(CompileVisitor::systemFunctions["printf"], arrArgs);
         }else{
             builder.CreateCall(CompileVisitor::systemFunctions["printf"], systemStrings["newLine"]);
@@ -130,4 +186,62 @@ antlrcpp::Any CompileVisitor::visitDefaultFunctions(BFParser::DefaultFunctionsCo
     }
 
     return nullptr;
+}
+
+antlrcpp::Any CompileVisitor::visitClassStat(BFParser::ClassStatContext *ctx) {
+    return BFParserBaseVisitor::visitClassStat(ctx);
+}
+
+antlrcpp::Any CompileVisitor::visitClassDeclaration(BFParser::ClassDeclarationContext *ctx) {
+    return BFParserBaseVisitor::visitClassDeclaration(ctx);
+}
+
+antlrcpp::Any CompileVisitor::visitFunctionDeclaration(BFParser::FunctionDeclarationContext *ctx) {
+    return BFParserBaseVisitor::visitFunctionDeclaration(ctx);
+}
+
+antlrcpp::Any CompileVisitor::visitBlock(BFParser::BlockContext *ctx) {
+    return BFParserBaseVisitor::visitBlock(ctx);
+}
+
+antlrcpp::Any CompileVisitor::visitArray(BFParser::ArrayContext *ctx) {
+    logger.log(ctx->getText() + " is array");
+    llvm::Type* finType = builder.getInt8Ty();
+    llvm::Type* arrIndTy = builder.getInt8Ty();
+
+    std::vector<llvm::Value*> valuesRetrieved;
+    for (auto* expr : ctx->expr()){
+        llvm::Value* expressionVisited = visitExpr(expr);
+        valuesRetrieved.push_back(expressionVisited);
+
+            //TODO: Search scope for most closely related relative
+        if (expressionVisited->getType()->isDoubleTy()) {
+            finType = builder.getDoubleTy();
+        } else if (expressionVisited->getType()->isIntegerTy(64) && !expressionVisited->getType()->isDoubleTy()){
+            finType = builder.getInt64Ty();
+        }
+    }
+
+    llvm::ArrayType* arrType = llvm::ArrayType::get(finType, ctx->expr().size());
+    llvm::AllocaInst* arrAlloc = builder.CreateAlloca(arrType);
+
+    for (int i = 0; i < valuesRetrieved.size(); i++){
+        llvm::Value* expressionVisited = valuesRetrieved[i];
+
+        std::vector<llvm::Value*> getArrArgs;
+        getArrArgs.push_back(llvm::ConstantInt::get(arrIndTy, 0));
+        getArrArgs.push_back(llvm::ConstantInt::get(arrIndTy, i));
+
+        llvm::Value *indexPointer = builder.CreateInBoundsGEP(arrAlloc, llvm::ArrayRef<llvm::Value *>(getArrArgs));
+        if(ctx->expr()[i]->typeDef() != nullptr) {
+            expressionVisited->mutateType(finType);
+            builder.CreateStore(expressionVisited, indexPointer);
+        }else if(expressionVisited->getType()->isIntegerTy()){
+            builder.CreateStore(builder.CreateIntCast(expressionVisited, finType, false), indexPointer);
+        }else{
+            builder.CreateStore(expressionVisited, indexPointer);
+        }
+    }
+
+    return arrAlloc;
 }
